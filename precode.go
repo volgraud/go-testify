@@ -51,7 +51,7 @@ func mainHandle(w http.ResponseWriter, req *http.Request) {
 
 func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
 	totalCount := 4
-	req := httptest.NewRequest("GET", "/cafe?count=5&city=moscow", nil)
+	req := httptest.NewRequest(http.MethodGet, "/cafe?count=5&city=moscow", nil)
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
@@ -71,7 +71,7 @@ func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
 }
 
 func TestMainHandlerSuccess(t *testing.T) {
-	req := httptest.NewRequest("GET", "/cafe?count=3&city=moscow", nil) // здесь нужно создать запрос к сервису
+	req := httptest.NewRequest(http.MethodGet, "/cafe?count=3&city=moscow", nil) // здесь нужно создать запрос к сервису
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
@@ -79,16 +79,22 @@ func TestMainHandlerSuccess(t *testing.T) {
 
 	require.NotEmpty(t, responseRecorder.Code)
 
+	assert.NotNil(t, responseRecorder.Body)
+
 	status := responseRecorder.Code
 	require.Equal(t, status, http.StatusOK)
 }
 
 func TestMainHandlerWrongCity(t *testing.T) {
-	req := httptest.NewRequest("GET", "/cafe?count=4&city=chelyabinsk", nil) // здесь нужно создать запрос к сервису
+	req := httptest.NewRequest(http.MethodGet, "/cafe?count=4&city=chelyabinsk", nil) // здесь нужно создать запрос к сервису
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
 	handler.ServeHTTP(responseRecorder, req)
+
+	status := responseRecorder.Code
+	statusBadRequest := http.StatusBadRequest
+	require.Equal(t, statusBadRequest, status)
 
 	body := responseRecorder.Body.String()
 	wrongCity := "wrong city value"
